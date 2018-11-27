@@ -163,8 +163,7 @@ local
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {PartitionToTimedList Partition}
-         for U in Partition
-            case U
+            case Partition
             of A#B then {NoteToExtended A#B}
             [] note(name:A octave:O sharp:B duration:D instrument:none)
                then note(name:A octave:O sharp:B duration:D instrument:none)
@@ -176,8 +175,7 @@ local
                [] 'stretch' then {Stretch A {PartitionToTimedList P}}
                [] 'transpose' then {Transpose A {PartitionToTimedList P}}
             [] Atom then {NoteToExtended Atom}
-            
-
+            end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
