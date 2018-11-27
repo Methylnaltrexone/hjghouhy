@@ -169,14 +169,14 @@ local
             [] note(name:A octave:O sharp:B duration:D instrument:none)
                then note(name:A octave:O sharp:B duration:D instrument:none)
             []H|T then {PartitionToTimedList H}|{PartitionToTimedList T}
-            [] registre(a:A P) then    % je suis pas sur qu'il détecte le registre
+            [] drone(note:A amount:B) then {Drone A B}
+            [] registre(A P) then    % je suis pas sur qu'il détecte le registre
                case registre
-               of 'duration' then {Duration A P}
-               [] 'stretch' then {Stretch A P}
-               [] 'transpose' then {Transpose A P}
-            [] drone(note:A amount:B P) then {Drone A B P}
+               of 'duration' then {Duration A {PartitionToTimedList P}}
+               [] 'stretch' then {Stretch A {PartitionToTimedList P}}
+               [] 'transpose' then {Transpose A {PartitionToTimedList P}}
             [] Atom then {NoteToExtended Atom}
-            else % DO SOMETHING
+            
 
    end
 
