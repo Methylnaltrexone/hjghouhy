@@ -23,8 +23,8 @@ local
          end
       end
    end
-   
-   % A VERIFIER
+
+   % il marche
    % transforme Chord en ExtendedChord
    fun {ChordToExtended Chord}
       case Chord
@@ -33,14 +33,14 @@ local
       else nil
       end
    end
-   
-   
+
+
    %on multiplie la duration de chaque note et extendedChord par le facteur
    fun {Stretch Factor Partition}
       case Partition
       of Name#Octave then {Stretch {NoteToExtended Partition}}
       [] note(name:A octave:B sharp:C duration:D instrument:E) then
-	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)	 
+	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)
       [] H|T then case H
 		  of Name#Octave then {Stretch {ChordToExtended Partition}}
 		  [] note(name:A octave:B sharp:C duration:D instrument:E) then
@@ -61,10 +61,39 @@ local
       [] Atom then {Stretch {NoteToExtended Partition}}
       end
    end
-   
-   % A VERIFIER
-   % faire la distinction si c'est une note ou un accord
-   %crée une liste avec la meme note/accord un certain nombre de fois (amount)
+
+
+	%A VERIFIER
+	%On change la duree de la partition en tenant compte de la durée de chaque note et en adaptant donc sa durée
+	%proportionnelement a sa durée dans la partition initiale
+   fun{Duration Seconds Partition}
+      local Acc in
+	 Acc={NewCell 0}
+	 case Partition
+	 of note(name:A octave:B sharp:C duration:D instrument:E)
+	 then Acc:= @A+D
+	 [] H|T
+	 then case H
+	      of note(name:A octave:B sharp:C duration:D instrument:E)
+	      then for Q in Partition
+		      Acc:= @Acc+Q.duration
+		   end
+	      else
+		 for Q in Partition
+		    Acc:= @Acc+1
+		 end
+	      end
+	 else
+	    Acc:= @Acc+1
+	 end
+	 local Di in
+	    Di = Seconds div Acc
+	    {Stretch Di Partition}
+	 end
+      end
+   end
+
+   % a faire en récursif
    fun {Drone Note Amount}
       local A = {NewCell nil} in
          for X in 1..Amount
@@ -73,15 +102,39 @@ local
          @A
       end
    end
- 
+
+   fun {DroneR X Amount}
+      case Amount of 0 then nil
+      else
+         case X
+         of nil then nil
+         [] H|T then
+            {DroneR H Amount}|{DroneR T Amount}
+         [] X|{DroneR X Amount-1}
+         end
+      end
+   end
+
+
+
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {PartitionToTimedList Partition}
-      local FlatList = nil in
          for U in Partition
             case U
-            of 
-         
+            of A#B then {NoteToExtended A#B}
+            [] note(name:A octave:O sharp:B duration:D instrument:none)
+               then note(name:A octave:O sharp:B duration:D instrument:none)
+            []H|T then {PartitionToTimedList H}|{PartitionToTimedList T}
+            [] registre(a:A P) then    % je suis pas sur qu'il détecte le registre
+               case registre
+               of 'duration' then {Duration A P}
+               [] 'stretch' then {Stretch A P}
+               [] 'transpose' then {Transpose A P}
+            [] drone(note:A amount:B P) then {Drone A B P}
+            [] Atom then {NoteToExtended Atom}
+            else fuck off
+
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,11 +161,11 @@ in
    % Add variables to this list to avoid "local variable used only once"
    % warnings.
    {ForAll [NoteToExtended Music] Wait}
-   
+
    % Calls your code, prints the result and outputs the result to `out.wav`.
    % You don't need to modify this.
    {Browse {Project.run Mix PartitionToTimedList Music 'out.wav'}}
-   
+
    % Shows the total time to run your code.
    {Browse {IntToFloat {Time}-Start} / 1000.0}
 end
