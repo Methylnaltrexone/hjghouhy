@@ -5,7 +5,7 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   % Translate a note to the extended notation.
+    % Translate a note to the extended notation.
    fun {NoteToExtended Note}
       case Note
       of Name#Octave then
@@ -24,75 +24,131 @@ local
       end
    end
 
-   % il marche
-   % transforme Chord en ExtendedChord
    fun {ChordToExtended Chord}
       case Chord
       of H|T then
          {NoteToExtended H}|{ChordToExtended T}
+      [] Atom then {NoteToExtended Chord}
       else nil
       end
    end
 
-
-   %on multiplie la duration de chaque note et extendedChord par le facteur
    fun {Stretch Factor Partition}
       case Partition
-      of Name#Octave then {Stretch {NoteToExtended Partition}}
+      of Name#Octave then {Stretch Factor {NoteToExtended Partition}}
       [] note(name:A octave:B sharp:C duration:D instrument:E) then
-	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)
+	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)	 
       [] H|T then case H
-		  of Name#Octave then {Stretch {ChordToExtended Partition}}
-		  [] note(name:A octave:B sharp:C duration:D instrument:E) then
-		     local Q in
-			Q = {NewCell nil}
-			for U in Partition
-			   local T in
-			      case U of note(name:A octave:B sharp:C duration:D instrument:E) then
-				 T=note(name:A octave:B sharp:C duration:D*Factor instrument:E)
-			      end
-			      Q:= @Q|T
-			   end
-			end
-		     @Q
-		     end
-		  [] Atom then {Stretch {ChordToExtended Partition}}
+		  of note(name:A octave:B sharp:C duration:D instrument:E) then
+		     {Stretch Factor H}|{Stretch Factor T}
+		  else {Stretch Factor {ChordToExtended Partition}}
 		  end
-      [] Atom then {Stretch {NoteToExtended Partition}}
+      [] Atom then {Stretch Factor {NoteToExtended Partition}}
       end
    end
 
-
-	%A VERIFIER
-	%On change la duree de la partition en tenant compte de la durée de chaque note et en adaptant donc sa durée
-	%proportionnelement a sa durée dans la partition initiale
-   fun{Duration Seconds Partition}
-      local Acc in
-	 Acc={NewCell 0}
+   %Calcule la duree de la partition
+      fun{Time Partition} 
 	 case Partition
 	 of note(name:A octave:B sharp:C duration:D instrument:E)
-	 then Acc:= @A+D
-	 [] H|T
-	 then case H
-	      of note(name:A octave:B sharp:C duration:D instrument:E)
-	      then for Q in Partition
-		      Acc:= @Acc+Q.duration
-		   end
-	      else
-		 for Q in Partition
-		    Acc:= @Acc+1
-		 end
-	      end
-	 else
-	    Acc:= @Acc+1
+	 then Partition.duration
+	 [] H|T then case H
+		     of note(name:A octave:B sharp:C duration:D instrument:E)
+		     then H.duration+{Time T}
+		     else 1.0+{Time T}
+		     end
+	 else 1.0
 	 end
-	 local Di in
-	    Di = Seconds div Acc
-	    {Stretch Di Partition}
+      end
+
+   
+   fun{Duration Seconds Partition}
+      
+      local Di in
+	 Di = Seconds/{Time Partition}
+	 {Stretch Di Partition}
+      end
+   end
+
+
+  % Passe la note en n°
+   fun {Num Partition}
+      if Partition.name==c then
+	 if Partition.sharp==false then 1
+	 else 2
+	 end
+      elseif Partition.name==d then
+	 if Partition.sharp==false then 3
+	 else 4
+	 end
+      elseif Partition.name==e then 5
+      elseif Partition.name==f then
+	 if Partition.sharp==false then 6
+	 else 7
+	 end
+      elseif Partition.name==g then
+	 if Partition.sharp==false then 8
+	 else 9
+	 end
+      elseif Partition.name==a then
+	 if Partition.sharp==false then 10
+	 else 11
+	 end
+      elseif Partition.name==b then 12
+      end
+   end
+
+
+   %Passe le n° en note
+   fun {Notee N O D I}
+      if N==1 then note(name:c octave:O sharp: false duration:D instrument:I)
+      elseif N==2 then note(name:c octave:O sharp: true duration:D instrument:I)
+      elseif N==3 then note(name:d octave:O sharp: false duration:D instrument:I)
+      elseif N==4 then note(name:d octave:O sharp: true duration:D instrument:I)
+      elseif N==5 then note(name:e octave:O sharp: false duration:D instrument:I)
+      elseif N==6 then note(name:f octave:O sharp: false duration:D instrument:I)
+      elseif N==7 then note(name:f octave:O sharp: true duration:D instrument:I)
+      elseif N==8 then note(name:g octave:O sharp: false duration:D instrument:I)
+      elseif N==9 then note(name:g octave:O sharp: true duration:D instrument:I)
+      elseif N==10 then note(name:a octave:O sharp: false duration:D instrument:I)
+      elseif N==11 then note(name:a octave:O sharp: true duration:D instrument:I)
+      elseif N==12 then note(name:b octave:O sharp: false duration:D instrument:I)
+      end
+   end
+   
+	 % Renvoie la note +1
+   fun{Ajout Partition}
+      local N in
+	 N={Num Partition}
+	 if N==12 then {Notee 1 Partition.octave+1 Partition.duration Partition.instrument}
+	 else {Notee N+1 Partition.octave Partition.duration Partition.instrument}
 	 end
       end
    end
 
+
+   %Ajoute le bon nombre de demitons et renvoie la note
+   fun{Tot Semitones Partition}
+      if Semitones==0 then Partition
+      else {Tot Semitones-1 {Ajout Partition}}
+      end
+   end
+
+   %Transpose la partition d'un certain nombre de notes
+   fun{Transpose Semitones Partition}
+      case Partition
+      of note(name:A octave:B sharp:C duration:D instrument:E)
+      then {Tot Semitones Partition}
+      [] H|T then case H
+	     of note(name:A octave:B sharp:C duration:D instrument:E)
+	     then {Tot Semitones H}|{Transpose Semitones T}
+	     else
+		{Transpose Semitones {ChordToExtended Partition}}
+	     end
+      else {Transpose Semitones {NoteToExtended Partition}}
+      end
+   end
+			     
    % a faire en récursif
    fun {Drone Note Amount}
       local A = {NewCell nil} in
