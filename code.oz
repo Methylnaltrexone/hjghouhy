@@ -37,7 +37,7 @@ local
       case Partition
       of Name#Octave then {Stretch Factor {NoteToExtended Partition}}
       [] note(name:A octave:B sharp:C duration:D instrument:E) then
-	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)	 
+	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)
       [] H|T then case H
 		  of note(name:A octave:B sharp:C duration:D instrument:E) then
 		     {Stretch Factor H}|{Stretch Factor T}
@@ -48,7 +48,7 @@ local
    end
 
    %Calcule la duree de la partition
-      fun{Time Partition} 
+      fun{Time Partition}
 	 case Partition
 	 of note(name:A octave:B sharp:C duration:D instrument:E)
 	 then Partition.duration
@@ -61,9 +61,9 @@ local
 	 end
       end
 
-   
+
    fun{Duration Seconds Partition}
-      
+
       local Di in
 	 Di = Seconds/{Time Partition}
 	 {Stretch Di Partition}
@@ -115,7 +115,7 @@ local
       elseif N==12 then note(name:b octave:O sharp: false duration:D instrument:I)
       end
    end
-   
+
 	 % Renvoie la note +1
    fun{Ajout Partition}
       local N in
@@ -148,26 +148,13 @@ local
       else {Transpose Semitones {NoteToExtended Partition}}
       end
    end
-			     
-   % a faire en récursif
-   fun {Drone Note Amount}
-      local A = {NewCell nil} in
-         for X in 1..Amount
-            A:= {NoteToExtended Note}|@A
-         end
-         @A
-      end
-   end
 
-   fun {DroneR X Amount}
+
+% Prend une note/accord et repète cette note/accord amount nombre de fois
+% a tester
+   fun {Drone X Amount}
       case Amount of 0 then nil
-      else
-         case X
-         of nil then nil
-         [] H|T then
-            {DroneR H Amount}|{DroneR T Amount}
-         [] X|{DroneR X Amount-1}
-         end
+      else X|{Drone X Amount-1}
       end
    end
 
@@ -189,7 +176,7 @@ local
                [] 'transpose' then {Transpose A P}
             [] drone(note:A amount:B P) then {Drone A B P}
             [] Atom then {NoteToExtended Atom}
-            else fuck off
+            else % DO SOMETHING
 
    end
 
