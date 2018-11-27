@@ -1,0 +1,13 @@
+declare
+ParA = [a b c]
+ParB = [a b2 c]
+ParC = [a b#2 c]
+ParD = [a silence c]
+ParE = [a note(name:b octave:4 sharp:false duration:1.0 instrument:none) c]
+ParF = [a note(name:b octave:2 sharp:true duration:2.0 instrument:none) c]
+ParG = [a [note(name:b octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none)] c]
+ParH = [a b duration(seconds:10.0 [c d]) e f]
+ParI = [a b stretch(factor:2.0 [c d]) e f]
+ParJ = [a b stretch(factor:2.0 [c duration(seconds:5.0 [b c])]) e f]
+
+end
