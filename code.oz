@@ -244,6 +244,10 @@ local
       end
    end
 
+   fun{NoteToSample Note}
+
+   end
+
    % possibilite de faire appel a {Mix P2T Music} pour avoir un sample et puis
    % faire un appel récursif qui reecrit la liste a l envers
    % mais c'est peut etre un peu chiant
@@ -288,11 +292,11 @@ local
       case Music
       of H|T then
          case {Label H}
-         of 'partition' then P2T(H.1)|{Mix P2T T}
+         of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
             [] 'samples' then H.1|{Mix P2T T}
             [] 'wave' then
             [] 'merge' then
-            [] 'reverse' then {Reverse }
+            [] 'reverse' then {Reverse {Mix P2T T} }
             [] 'repeat' then
             [] 'loop' then
             [] 'clip' then
