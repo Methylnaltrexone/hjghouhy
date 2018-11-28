@@ -150,7 +150,7 @@ local
    end
 
 
-% Prend une note/accord et repète cette note/accord amount nombre de fois
+% Prend une note/accord et repete cette note/accord amount nombre de fois
 % a tester
    fun {Drone X Amount}
       case Amount of 0 then nil
@@ -169,7 +169,7 @@ local
                then note(name:A octave:O sharp:B duration:D instrument:none)
             []H|T then {PartitionToTimedList H}|{PartitionToTimedList T}
             [] drone(note:A amount:B) then {Drone A B}
-            [] registre(A P) then    % je suis pas sur qu'il détecte le registre
+            [] registre(A P) then    % je suis pas sur qu'il detecte le registre
                case registre
                of 'duration' then {Duration A {PartitionToTimedList P}}
                [] 'stretch' then {Stretch A {PartitionToTimedList P}}
@@ -179,9 +179,62 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % possibilite de faire appel a {Mix P2T Music} pour avoir un sample et puis
+   % faire un appel récursif qui reecrit la liste a l envers
+   % mais c'est peut etre un peu chiant
+   fun{Reverse Music}
 
+   end
+
+   fun{Repeat Amount Music}
+      if Amount == 0 then nil
+      else Music|{Repeat Amount-1 Music}
+      end
+   end
+
+   fun{Loop Seconds Music}
+
+   end
+
+   fun{Clip Low High Music}
+
+   end
+
+   fun{Echo Delay Decay Music}
+
+   end
+
+   fun{Fade Start Out Music}
+
+   end
+
+   fun{Cut Start Finish Music}
+
+   end
+
+   fun{Merge !! arguments ? !!}
+
+   end
+
+
+   % !! si on a une partition il faut faire P2T(Partition)
+   % et pas PartitionToTimedList(Partition)
    fun {Mix P2T Music}
-      % TODO
+      case Music
+      of H|T then
+         case {Label H}
+         of 'partition' then P2T(!)|{Mix P2T T}
+            [] 'samples' then !|{Mix P2T T}
+            [] 'wave' then
+            [] 'merge' then
+            [] 'reverse' then {Reverse }
+            [] 'repeat' then
+            [] 'loop' then
+            [] 'clip' then
+            [] 'echo' then
+            [] 'fade' then
+            [] 'cut' then
+      []
       {Project.readFile 'wave/animaux/cow.wav'}
    end
 
