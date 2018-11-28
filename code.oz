@@ -5,7 +5,7 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % Translate a note to the extended notation.
+   % Translate a note to the extended notation.
    fun {NoteToExtended Note}
       case Note
       of Name#Octave then
@@ -24,6 +24,9 @@ local
       end
    end
 
+
+
+   %Translates a chrod to the extended notation
    fun {ChordToExtended Chord}
       case Chord
       of H|T then
@@ -33,9 +36,17 @@ local
       end
    end
 
+
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+   %Multiplies the duration of a note by a factor
    fun {Stretch Factor Partition}
       case Partition
       of Name#Octave then {Stretch Factor {NoteToExtended Partition}}
+	 [] silence(duration:D) then silence(duration:D*Factor)
       [] note(name:A octave:B sharp:C duration:D instrument:E) then
 	 note(name:A octave:B sharp:C duration:D*Factor instrument:E)
       [] H|T then case H
@@ -47,19 +58,27 @@ local
       end
    end
 
-   %Calcule la duree de la partition
-      fun{Time Partition}
-	 case Partition
-	 of note(name:A octave:B sharp:C duration:D instrument:E)
-	 then Partition.duration
-	 [] H|T then case H
-		     of note(name:A octave:B sharp:C duration:D instrument:E)
-		     then H.duration+{Time T}
-		     else 1.0+{Time T}
-		     end
-	 else 1.0
-	 end
+
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+   %Calculates the total time of the partition
+   fun{Time Partition}
+      case Partition
+      of note(name:A octave:B sharp:C duration:D instrument:E)
+      then Partition.duration
+      [] silence(duration:D) then D
+      [] H|T then case H
+		  of note(name:A octave:B sharp:C duration:D instrument:E)
+		  then H.duration+{Time T}
+		  else 1.0+{Time T}
+		  end
+      else 1.0
       end
+   end
+
 
 
    fun{Duration Seconds Partition}
@@ -71,7 +90,12 @@ local
    end
 
 
-  % Passe la note en n°
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+  % Changes the note to a number
    fun {Num Partition}
       if Partition.name==c then
 	 if Partition.sharp==false then 1
@@ -99,7 +123,8 @@ local
    end
 
 
-   %Passe le n° en note
+
+   %Changes the number to a note
    fun {Notee N O D I}
       if N==1 then note(name:c octave:O sharp: false duration:D instrument:I)
       elseif N==2 then note(name:c octave:O sharp: true duration:D instrument:I)
@@ -116,7 +141,9 @@ local
       end
    end
 
-	 % Renvoie la note +1
+
+
+   % Moves the partition 1 semitone up
    fun{Ajout Partition}
       local N in
 	 N={Num Partition}
@@ -127,18 +154,35 @@ local
    end
 
 
-   %Ajoute le bon nombre de demitons et renvoie la note
-   fun{Tot Semitones Partition}
-      if Semitones==0 then Partition
-      else {Tot Semitones-1 {Ajout Partition}}
+
+   % Moves the partition 1 semitone down
+   fun{Soustr Partition}
+      local N in
+	 N={Num Partition}
+	 if N==1 then {Notee 12 Partition.octave-1 Partition.duration Partition.instrument}
+	 else {Notee N-1 Partition.octave Partition.duration Partition.instrument}
+	 end
       end
    end
 
-   %Transpose la partition d'un certain nombre de notes
+
+
+   %Adds the right amount of semitones and returns de partition
+   fun{Tot Semitones Partition}
+      if Semitones==0 then Partition
+      elseif Semitones>0 then {Tot Semitones-1 {Ajout Partition}}
+      else {Tot Semitones+1 {Soustr Partition}}
+      end
+   end
+
+
+
+   %Transposes the Partition a certain number of semitones up or down
    fun{Transpose Semitones Partition}
       case Partition
       of note(name:A octave:B sharp:C duration:D instrument:E)
       then {Tot Semitones Partition}
+      [] silence(duration:D) then silence(duration:D)
       [] H|T then case H
 	     of note(name:A octave:B sharp:C duration:D instrument:E)
 	     then {Tot Semitones H}|{Transpose Semitones T}
@@ -150,8 +194,11 @@ local
    end
 
 
-% Prend une note/accord et repete cette note/accord amount nombre de fois
-% a tester
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
    fun {Drone X Amount}
       case Amount of 0 then nil
       else X|{Drone X Amount-1}
@@ -160,25 +207,43 @@ local
 
 
 
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+
    fun {PartitionToTimedList Partition}
-            case Partition
-            of A#B then {NoteToExtended A#B}
-            [] note(name:A octave:O sharp:B duration:D instrument:none)
-               then note(name:A octave:O sharp:B duration:D instrument:none)
-            []H|T then {PartitionToTimedList H}|{PartitionToTimedList T}
-            [] drone(note:A amount:B) then {Drone A B}
-            [] registre(A P) then    % je suis pas sur qu'il detecte le registre
-               case registre
-               of 'duration' then {Duration A {PartitionToTimedList P}}
-               [] 'stretch' then {Stretch A {PartitionToTimedList P}}
-               [] 'transpose' then {Transpose A {PartitionToTimedList P}}
-            [] Atom then {NoteToExtended Atom}
-            end
+      case Partition
+      of A#B then {NoteToExtended A#B}
+      [] silence(duration:D) then silence(duration:D)
+      [] note(name:A octave:B sharp:C duration:D instrument:E)
+      then  note(name:A octave:B sharp:C duration:D instrument:E)
+      []H|T then {PartitionToTimedList H}|{PartitionToTimedList T}
+      [] Atom then
+	 case {Label Partition}
+	 of 'duration' then {Duration Partition.1 {PartitionToTimedList Partition.2}}
+	 [] 'stretch' then {Stretch Partition.1 {PartitionToTimedList Partition.2}}
+	 [] 'transpose' then {Transpose Partition.1 {PartitionToTimedList Partition.2}}
+	 [] 'drone' then {Drone Partition.1 Partition.2}
+	 else {NoteToExtended Atom}
+	 end
+      end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %Returns the number of semitons between Note and A4
+   fun{Hauteur Note}
+      local Note2 = {PartitionToTimedList Note} in
+         case {Label Note2} of 'silence' then 0.0
+         [] 'note'
+         then 12.0*{IntToFloat Note2.octave} + {IntToFloat {Num Note2}} - 58.0
+         else 0.0
+         end
+      end
+   end
+
    % possibilite de faire appel a {Mix P2T Music} pour avoir un sample et puis
    % faire un appel récursif qui reecrit la liste a l envers
    % mais c'est peut etre un peu chiant
@@ -216,15 +281,15 @@ local
 
    end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % !! si on a une partition il faut faire P2T(Partition)
    % et pas PartitionToTimedList(Partition)
    fun {Mix P2T Music}
       case Music
       of H|T then
          case {Label H}
-         of 'partition' then P2T(!)|{Mix P2T T}
-            [] 'samples' then !|{Mix P2T T}
+         of 'partition' then P2T(H.1)|{Mix P2T T}
+            [] 'samples' then H.1|{Mix P2T T}
             [] 'wave' then
             [] 'merge' then
             [] 'reverse' then {Reverse }
