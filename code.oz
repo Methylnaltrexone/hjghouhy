@@ -243,6 +243,7 @@ local
          end
       end
    end
+
    % takes as argument a note and returns a sample of that note
    % marche pas, probleme de type, genre float ou int je sais pas ou
    % peut etre les unites des sinus
@@ -261,7 +262,13 @@ local
       end
    end
 
+   fun{PartToSamp Partition}
+      case Partition
+      of H|T then {NoteToSample H}|{PartToSamp T}
+      else {NoteToSample Partition}
+      end
    end
+   
    % takes as argument a file path and returns a sample
    fun{WavToSample FileName}
       {Project.load FileName} % pas sur que la fonction s'utilise comme ca
@@ -297,6 +304,8 @@ local
    end
 
    fun{Cut Start Finish Music}
+      Istart = Start*44100
+      Istop = Finish*44100
 
    end
 
