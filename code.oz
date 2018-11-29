@@ -263,6 +263,7 @@ local
       end
    end
 
+   % transforms a partition to a sample
    fun{PartToSamp Partition}
       case Partition
       of H|T then {NoteToSample H}|{PartToSamp T}
@@ -289,7 +290,14 @@ local
    end
 
    fun{Loop Seconds Music}
-
+      local
+         A = {SamPinMusic Music}
+         B = Seconds*44100.0
+         C = {FloatToInt B} div {FloatToInt A} % la division ramenee vers le bas
+         D = B/A - {IntToFloat C} % le reste de la division
+      in
+         {Repeat C Music}|%utiliser cut quand il sera fait
+      end
    end
 
    fun{Clip Low High Music}
@@ -307,7 +315,7 @@ local
    fun{Cut Start Finish Music}
       Istart = Start*44100.0
       Istop = Finish*44100.0
-
+      
    end
 
    fun{Merge !! arguments ? !!}
