@@ -245,13 +245,11 @@ local
    end
 
    % takes as argument a note and returns a sample of that note
-   % marche pas, probleme de type, genre float ou int je sais pas ou
-   % peut etre les unites des sinus
    fun{NoteToSample Note}
       local
          H = {Hauteur Note}
-         F = {Pow 2.0 h/12.0} * 440.0
-         Itot = Note.duration*44100.0 % nbre d echantillons a faire pour la note
+         F = {Pow 2.0 H/12.0} * 440.0}
+         Itot = {Note.duration*44100.0}
          Pi = 3.14159265359
       in
          local
@@ -263,7 +261,7 @@ local
          in {DoItAgain 1.0}
          end
       end
-   end 
+   end
 
    fun{PartToSamp Partition}
       case Partition
@@ -274,7 +272,7 @@ local
 
    % takes as argument a file path and returns a sample
    fun{WavToSample FileName}
-      {Project.load FileName} % pas sur que la fonction s'utilise comme ca
+      {Project.load FileName}
    end
 
    % takes as argument a sample and returns the sample in reversed order
@@ -344,10 +342,10 @@ local
          case {Label H}
          of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
             [] 'samples' then H.1|{Mix P2T T}
-            [] 'wave' then {WavToSample H.1}
+            [] 'wave' then {WavToSample H.1}|{Mix P2T T}
             [] 'merge' then
-            [] 'reverse' then {Reverse {Mix P2T T} }
-            [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}
+            [] 'reverse' then {Reverse H.1}|{Mix P2T T}
+            [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
             [] 'loop' then
             [] 'clip' then
             [] 'echo' then
