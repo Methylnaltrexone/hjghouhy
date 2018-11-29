@@ -248,19 +248,22 @@ local
    % marche pas, probleme de type, genre float ou int je sais pas ou
    % peut etre les unites des sinus
    fun{NoteToSample Note}
-      H = {Hauteur Note}
-      F = {Pow 2 h/12} * 440
-      Itot = Note.duration*44100 % nbre d echantillons a faire pour la note
-      Pi = 3.14159265359
       local
-         fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
-            if C == Itot then 1/2*{Sin 2*Pi*F*C/44100}
-            else 1/2*{Sin 2*Pi*F*C/44100}|{DoItAgain C+1}
+         H = {Hauteur Note}
+         F = {Pow 2.0 h/12.0} * 440.0
+         Itot = Note.duration*44100.0 % nbre d echantillons a faire pour la note
+         Pi = 3.14159265359
+      in
+         local
+            fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
+               if C == Itot then 0.5*{Sin 2.0*Pi*F*C/44100.0}
+               else 0.5*{Sin 2.0*Pi*F*C/44100.0}|{DoItAgain C+1.0}
+               end
             end
+         in {DoItAgain 1.0}
          end
-      in {DoItAgain 1}
       end
-   end
+   end 
 
    fun{PartToSamp Partition}
       case Partition
@@ -268,7 +271,7 @@ local
       else {NoteToSample Partition}
       end
    end
-   
+
    % takes as argument a file path and returns a sample
    fun{WavToSample FileName}
       {Project.load FileName} % pas sur que la fonction s'utilise comme ca
@@ -282,7 +285,7 @@ local
    end
 
    fun{Repeat Amount Music}
-      if Amount == 0 then nil
+      if Amount == 1 then Music
       else Music|{Repeat Amount-1 Music}
       end
    end
@@ -304,8 +307,8 @@ local
    end
 
    fun{Cut Start Finish Music}
-      Istart = Start*44100
-      Istop = Finish*44100
+      Istart = Start*44100.0
+      Istop = Finish*44100.0
 
    end
 
@@ -319,17 +322,17 @@ local
       local
          fun{SampInMusAcc Mus Acc}
             case Mus
-            of H|T then {SampInMusAcc T Acc+1}
-            else Acc+1
+            of H|T then {SampInMusAcc T Acc+1.0}
+            else Acc+1.0
             end
          end
-      in {SampInMusAcc Music 0}
+      in {SampInMusAcc Music 0.0}
       end
    end
 
    % takes a sample as an argument, returns the number of seconds in that sample
    fun{SecInMusic Music}
-      {SamPinMusic Music}/44100
+      {SamPinMusic Music}/44100.0
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -344,7 +347,7 @@ local
             [] 'wave' then {WavToSample H.1}
             [] 'merge' then
             [] 'reverse' then {Reverse {Mix P2T T} }
-            [] 'repeat' then
+            [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}
             [] 'loop' then
             [] 'clip' then
             [] 'echo' then
