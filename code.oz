@@ -243,16 +243,35 @@ local
          end
       end
    end
-
+   % takes as argument a note and returns a sample of that note
+   % marche pas, probleme de type, genre float ou int je sais pas ou
+   % peut etre les unites des sinus
    fun{NoteToSample Note}
-
+      H = {Hauteur Note}
+      F = {Pow 2 h/12} * 440
+      Itot = Note.duration*44100 % nbre d echantillons a faire pour la note
+      Pi = 3.14159265359
+      local
+         fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
+            if C == Itot then 1/2*{Sin 2*Pi*F*C/44100}
+            else 1/2*{Sin 2*Pi*F*C/44100}|{DoItAgain C+1}
+            end
+         end
+      in {DoItAgain 1}
+      end
    end
 
-   % possibilite de faire appel a {Mix P2T Music} pour avoir un sample et puis
-   % faire un appel récursif qui reecrit la liste a l envers
-   % mais c'est peut etre un peu chiant
-   fun{Reverse Music}
+   end
+   % takes as argument a file path and returns a sample
+   fun{WavToSample FileName}
+      {Project.load FileName} % pas sur que la fonction s'utilise comme ca
+   end
 
+   % takes as argument a sample and returns the sample in reversed order
+   fun{Reverse Music}
+      case Music of H|T then {Reverse T}|H
+      else Music
+      end
    end
 
    fun{Repeat Amount Music}
@@ -284,6 +303,25 @@ local
    fun{Merge !! arguments ? !!}
 
    end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AUTRES FONCTIONS
+   % takes as argument a sample, and return the number of samples in that sample
+   fun{SampInMusic Music}
+      local
+         fun{SampInMusAcc Mus Acc}
+            case Mus
+            of H|T then {SampInMusAcc T Acc+1}
+            else Acc+1
+            end
+         end
+      in {SampInMusAcc Music 0}
+      end
+   end
+
+   % takes a sample as an argument, returns the number of seconds in that sample
+   fun{SecInMusic Music}
+      {SamPinMusic Music}/44100
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % !! si on a une partition il faut faire P2T(Partition)
@@ -294,7 +332,7 @@ local
          case {Label H}
          of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
             [] 'samples' then H.1|{Mix P2T T}
-            [] 'wave' then
+            [] 'wave' then {WavToSample H.1}
             [] 'merge' then
             [] 'reverse' then {Reverse {Mix P2T T} }
             [] 'repeat' then
