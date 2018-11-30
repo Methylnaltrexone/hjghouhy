@@ -312,10 +312,30 @@ local
 
    end
 
+   % si on commence a start = 0 on manque 1 sample je pense...
    fun{Cut Start Finish Music}
-      Istart = Start*44100.0
-      Istop = Finish*44100.0
-      
+      local
+         Istart = Start*44100.0
+         Istop = Finish*44100.0
+         fun{YesOrNo Music AccI}
+            case Music
+            of H|T then if AccI >= Istart
+                           then if AccI < Istop then H|{YesOrNo T AccI+1} %ajouter a la liste
+                                else H % AccI = Istop normalement
+                                end
+                        else {YesOrNo T AccI+1}
+                        end
+            [] nil then if AccI >= Istart
+                           then if AccI < Istop then {MoarZeros {FloatToInt Istop}+1-AccI}
+                                else 0 % AccI = Istop normalement
+                                end
+                        else {YesOrNo Music AccI+1}
+                        end
+            end
+         end
+      in
+         {YesOrNo Music 1}
+      end
    end
 
    fun{Merge !! arguments ? !!}
@@ -339,6 +359,14 @@ local
    % takes a sample as an argument, returns the number of seconds in that sample
    fun{SecInMusic Music}
       {SamPinMusic Music}/44100.0
+   end
+
+   % amount is a natural, the functions returns a list of Amount zeros
+   fun{MoarZeros Amount}
+      case Amount of 1.0 then 0
+      [] 0.0 then
+      else 0|{MoarZeros Amount-1.0}
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
