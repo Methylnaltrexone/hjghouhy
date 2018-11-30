@@ -312,7 +312,7 @@ local
 
    end
 
-   % si on commence a start = 0 on manque 1 sample je pense...
+   % si on commence a start = 0 on manque 1 sample je pense... baleccc
    fun{Cut Start Finish Music}
       local
          Istart = Start*44100.0
