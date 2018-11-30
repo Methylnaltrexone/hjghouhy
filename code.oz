@@ -296,7 +296,7 @@ local
          C = {FloatToInt B} div {FloatToInt A} % la division ramenee vers le bas
          D = B/A - {IntToFloat C} % le reste de la division
       in
-         {Repeat C Music}|%utiliser cut quand il sera fait
+         {Repeat C Music}|{Cut 0.0 D Music}
       end
    end
 
