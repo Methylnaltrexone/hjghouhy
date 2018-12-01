@@ -323,19 +323,29 @@ local
    end
 
 
-   %diviser 1.0 par le nombre d'echantillon durant start,
-   % pour le premier echantillon on multiplie pas le resultat de la div
-   %pour le 2eme, multiplie par 2* le resultat ect ect
-   % meme chose pour out
+
    fun{Fade Start Out Music}
       local
          Opening = Start*44100.0
          Ending = Out*44100.0
+         SampTot = {SampInMusic Music}
+         % SampBetween = SampTot - Opening - Ending
          MultIn = 1.0/Opening
          MultOut = 1.0/Ending
-         fun{Multip Opening MultIn I Music}
-
+         fun{Multip Music Acc}
+            case Music of H|T then if Acc <= Opening
+                                     then MultIn*(Acc-1)|{Multip T Acc+1}
+                                   else if Acc >= Ending
+                                          then MultOut*(SampTot - Acc)|{Multip T Acc+1}
+                                        else H|{Multip T Acc+1}
+                                        end
+                                    end
+            else Music
+            end
          end
+      in
+         {Multip Music 1}
+      end
    end
 
    % si on commence a start = 0 on manque 1 sample je pense... baleccc
@@ -365,7 +375,7 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+   % peut etre ajouter P2T en argument pour etre sur qu'il l'utilise
    fun{Prod Music}
       case Music
       of A#B then
@@ -387,6 +397,7 @@ local
       end
    end
 
+   % peut etre ajouter P2T en argument pour etre sur qu'il l'utilise
    fun{Merge Musics}
       case Musics.1
       of nil then nil
@@ -422,6 +433,7 @@ local
       else 0|{MoarZeros Amount-1.0}
       end
    end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % !! si on a une partition il faut faire P2T(Partition)
