@@ -280,11 +280,16 @@ local
 
    % takes as argument a sample and returns the sample in reversed order
    fun{Reverse Music}
-      case Music of H|T then {Reverse T}|H
-      else Music
+      local
+         fun{Reverse2 Music}
+        case Music of H|T then if T == nil then H else {Reverse2 T}|H end
+        else Music
+        end
+         end
+      in
+         {Reverse2 Music}|nil
       end
    end
-
    % takes a natural and a sample as argument, returns Amount time the sample
    fun{Repeat Amount Music}
       if Amount == 0 then nil
@@ -334,9 +339,9 @@ local
          MultOut = 1.0/Ending
          fun{Multip Music Acc}
             case Music of H|T then if Acc <= Opening
-                                     then MultIn*(Acc-1)|{Multip T Acc+1}
+                                     then MultIn*{IntToFloat Acc-1}|{Multip T Acc+1}
                                    else if Acc >= Ending
-                                          then MultOut*(SampTot - Acc)|{Multip T Acc+1}
+                                          then MultOut*(SampTot - {IntToFloat Acc})|{Multip T Acc+1}
                                         else H|{Multip T Acc+1}
                                         end
                                     end
