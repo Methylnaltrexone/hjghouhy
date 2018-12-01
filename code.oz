@@ -278,18 +278,7 @@ local
       {Project.load FileName}
    end
 
-   % takes as argument a sample and returns the sample in reversed order
-   fun{Reverse Music}
-      local
-         fun{Reverse2 Music}
-        case Music of H|T then if T == nil then H else {Reverse2 T}|H end
-        else Music
-        end
-         end
-      in
-         {Reverse2 Music}|nil
-      end
-   end
+
    % takes a natural and a sample as argument, returns Amount time the sample
    fun{Repeat Amount Music}
       if Amount == 0 then nil
@@ -299,7 +288,7 @@ local
 
    fun{Loop Seconds Music}
       local
-         A = {SampInMusic Music}
+         A = {List.length Music}
          B = Seconds*44100.0
          C = {FloatToInt B} div {FloatToInt A} % la division ramenee vers le bas
          D = B/A - {IntToFloat C} % le reste de la division
@@ -333,7 +322,7 @@ local
       local
          Opening = Start*44100.0
          Ending = Out*44100.0
-         SampTot = {SampInMusic Music}
+         SampTot = {List.length Music}
          % SampBetween = SampTot - Opening - Ending
          MultIn = 1.0/Opening
          MultOut = 1.0/Ending
@@ -413,29 +402,17 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % AUTRES FONCTIONS
-   % takes as argument a sample, and return the number of samples in that sample
-   fun{SampInMusic Music}
-      local
-         fun{SampInMusAcc Mus Acc}
-            case Mus
-            of H|T then {SampInMusAcc T Acc+1}
-            else Acc
-            end
-         end
-      in {SampInMusAcc Music 0}
-      end
-   end
 
    % takes a sample as an argument, returns the number of seconds in that sample
    fun{SecInMusic Music}
-      {SamPinMusic Music}/44100.0
+      {IntToFloat {List.length Music}}/44100.0
    end
 
    % amount is a natural, the functions returns a list of Amount zeros
    fun{MoarZeros Amount}
-      case Amount of 1.0 then 0
-      [] 0.0 then
-      else 0|{MoarZeros Amount-1.0}
+      case Amount of 1 then 0|nil
+      [] 0 then nil
+      else 0|{MoarZeros Amount-1}
       end
    end
 
@@ -451,12 +428,12 @@ local
             [] 'samples' then H.1|{Mix P2T T}
             [] 'wave' then {WavToSample H.1}|{Mix P2T T}
             [] 'merge' then
-            [] 'reverse' then {Reverse H.1}|{Mix P2T T}
+            [] 'reverse' then {List.reverse {Mix P2T H.1}}|{Mix P2T T}
             [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
             [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
             [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
             [] 'echo' then
-            [] 'fade' then
+            [] 'fade' then {Fade H.start H.out {Mix P2T H.1}}|{Mix P2T T}
             [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
       []
       {Project.readFile 'wave/animaux/cow.wav'}
