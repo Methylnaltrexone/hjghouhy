@@ -255,7 +255,9 @@ local
          local
             fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
                if C == Itot then 0.5*{Sin 2.0*Pi*F*C/44100.0}
-               else 0.5*{Sin 2.0*Pi*F*C/44100.0}|{DoItAgain C+1.0}
+               else if C == Itot+1 then nil
+                    else 0.5*{Sin 2.0*Pi*F*C/44100.0}|{DoItAgain C+1.0}
+                    end
                end
             end
          in {DoItAgain 1.0}
@@ -283,15 +285,16 @@ local
       end
    end
 
+   % takes a natural and a sample as argument, returns Amount time the sample
    fun{Repeat Amount Music}
-      if Amount == 1 then Music
+      if Amount == 0 then nil
       else Music|{Repeat Amount-1 Music}
       end
    end
 
    fun{Loop Seconds Music}
       local
-         A = {SamPinMusic Music}
+         A = {SampInMusic Music}
          B = Seconds*44100.0
          C = {FloatToInt B} div {FloatToInt A} % la division ramenee vers le bas
          D = B/A - {IntToFloat C} % le reste de la division
@@ -300,16 +303,39 @@ local
       end
    end
 
+   % takes as argument an upper limite High and a lower limit Low and a sample
+   % return the sample but none are higher than high and none are lower than low
    fun{Clip Low High Music}
-
+      case Music
+      of H|T then if H < Low then Low|{Clip Low High T}
+                  else if H > High then High|{Clip Low High T}
+                       else H|{Clip Low High T}
+                       end
+                  end
+      [] nil then nil
+      end
    end
+
+
 
    fun{Echo Delay Decay Music}
 
    end
 
-   fun{Fade Start Out Music}
 
+   %diviser 1.0 par le nombre d'echantillon durant start,
+   % pour le premier echantillon on multiplie pas le resultat de la div
+   %pour le 2eme, multiplie par 2* le resultat ect ect
+   % meme chose pour out
+   fun{Fade Start Out Music}
+      local
+         Opening = Start*44100.0
+         Ending = Out*44100.0
+         MultIn = 1.0/Opening
+         MultOut = 1.0/Ending
+         fun{Multip Opening MultIn I Music}
+
+         end
    end
 
    % si on commence a start = 0 on manque 1 sample je pense... baleccc
@@ -338,9 +364,37 @@ local
       end
    end
 
-   fun{Merge !! arguments ? !!}
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+   fun{Prod Music}
+      case Music
+      of A#B then
+	 local
+	    Q={Mix P2T B}
+	 in
+	    local
+	       fun{Prod2 A Q}
+		  case Q
+		  of nil then nil
+		  []H|T then A*Q.1|{Prod2 A Q.2}
+		  else A*Q
+		  end
+	       end
+	    in
+	       {Prod2 A Q}
+	    end
+	 end
+      end
    end
+
+   fun{Merge Musics}
+      case Musics.1
+      of nil then nil
+      [] A#B then {Prod Musics.1}|{Merge Musics.2}
+      else {Prod Musics}
+      end
+   end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % AUTRES FONCTIONS
    % takes as argument a sample, and return the number of samples in that sample
@@ -348,11 +402,11 @@ local
       local
          fun{SampInMusAcc Mus Acc}
             case Mus
-            of H|T then {SampInMusAcc T Acc+1.0}
-            else Acc+1.0
+            of H|T then {SampInMusAcc T Acc+1}
+            else Acc
             end
          end
-      in {SampInMusAcc Music 0.0}
+      in {SampInMusAcc Music 0}
       end
    end
 
@@ -382,11 +436,11 @@ local
             [] 'merge' then
             [] 'reverse' then {Reverse H.1}|{Mix P2T T}
             [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
-            [] 'loop' then
-            [] 'clip' then
+            [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
+            [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
             [] 'echo' then
             [] 'fade' then
-            [] 'cut' then
+            [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
       []
       {Project.readFile 'wave/animaux/cow.wav'}
    end
