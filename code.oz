@@ -198,14 +198,13 @@ local
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
+   % si c'est un accord ou une note faut le transformer en extended !!
+   % j'ai fait PartitionToTimedList sur l argument ca devrait le faire
    fun {Drone X Amount}
       case Amount of 0 then nil
       else X|{Drone X Amount-1}
       end
    end
-
-
 
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,7 +224,7 @@ local
 	 of 'duration' then {Duration Partition.1 {PartitionToTimedList Partition.2}}
 	 [] 'stretch' then {Stretch Partition.1 {PartitionToTimedList Partition.2}}
 	 [] 'transpose' then {Transpose Partition.1 {PartitionToTimedList Partition.2}}
-	 [] 'drone' then {Drone Partition.1 Partition.2}
+	 [] 'drone' then {Drone Partition.1 {PartitionToTimedList Partition.2}}
 	 else {NoteToExtended Atom}
 	 end
       end
@@ -246,24 +245,23 @@ local
 
    % takes as argument a note and returns a sample of that note
    fun{NoteToSample Note}
+   local
+      H = {Hauteur Note}
+      F = {Pow 2.0 H/12.0} * 440.0
+      Itot = Note.duration*44100.0
+      Pi = 3.14159265359
+   in
       local
-         H = {Hauteur Note}
-         F = {Pow 2.0 H/12.0} * 440.0}
-         Itot = {Note.duration*44100.0}
-         Pi = 3.14159265359
-      in
-         local
-            fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
-               if C == Itot then 0.5*{Sin 2.0*Pi*F*C/44100.0}
-               else if C == Itot+1 then nil
-                    else 0.5*{Sin 2.0*Pi*F*C/44100.0}|{DoItAgain C+1.0}
-                    end
-               end
-            end
-         in {DoItAgain 1.0}
-         end
+     fun{DoItAgain C} % peut etre mettre en argument H,F et Itot
+        if C == Itot+1.0 then nil
+        else 0.5*{Sin 2.0*Pi*F*C/44100.0}|{DoItAgain C+1.0}
+        end
+     end
+      in {DoItAgain 1.0}
       end
    end
+end
+
 
    % transforms a partition to a sample
    fun{PartToSamp Partition}
@@ -313,8 +311,17 @@ local
 
 
    fun{Echo Delay Decay Music}
-
-   end
+         local Music2 in
+        if Delay != 0 then Music2 = silence(duration:Delay)|Music
+        else Music2 = Music
+        end
+        local A B in
+           A = 1#Music
+           B = Decay#Music2
+           {Merge A|B|nil}
+        end
+         end
+      end
 
 
 
@@ -349,13 +356,13 @@ local
          Istop = Finish*44100.0
          fun{YesOrNo Music AccI}
             case Music
-            of H|T then if AccI >= Istart
-                           then if AccI < Istop then H|{YesOrNo T AccI+1} %ajouter a la liste
+            of H|T then if AccI >= {FloatToInt Istart}
+                           then if AccI < {FloatToInt Istop} then H|{YesOrNo T AccI+1} %ajouter a la liste
                                 else H % AccI = Istop normalement
                                 end
                         else {YesOrNo T AccI+1}
                         end
-            [] nil then if AccI >= Istart
+            [] nil then if AccI >= {FloatToInt Istart}
                            then if AccI < Istop then {MoarZeros {FloatToInt Istop}+1-AccI}
                                 else 0 % AccI = Istop normalement
                                 end
@@ -402,7 +409,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % AUTRES FONCTIONS
-
+   % pas utilise pour le moment
    % takes a sample as an argument, returns the number of seconds in that sample
    fun{SecInMusic Music}
       {IntToFloat {List.length Music}}/44100.0
@@ -415,8 +422,6 @@ local
       else 0|{MoarZeros Amount-1}
       end
    end
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % !! si on a une partition il faut faire P2T(Partition)
    % et pas PartitionToTimedList(Partition)
