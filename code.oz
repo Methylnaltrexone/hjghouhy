@@ -335,17 +335,17 @@ end
          MultOut = 1.0/Ending
          fun{Multip Music Acc}
             case Music of H|T then if Acc <= Opening
-                                     then MultIn*{IntToFloat Acc-1}|{Multip T Acc+1}
+                                     then MultIn*(Acc-1.0)|{Multip T Acc+1.0}
                                    else if Acc >= Ending
-                                          then MultOut*(SampTot - {IntToFloat Acc})|{Multip T Acc+1}
-                                        else H|{Multip T Acc+1}
+                                          then MultOut*(SampTot - Acc)|{Multip T Acc+1.0}
+                                        else H|{Multip T Acc+1.0}
                                         end
                                     end
             else Music
             end
          end
       in
-         {Multip Music 1}
+         {Multip Music 1.0}
       end
    end
 
