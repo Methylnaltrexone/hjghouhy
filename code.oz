@@ -311,18 +311,13 @@ end
 
 
    fun{Echo Delay Decay Music}
-         local Music2 in
-        if Delay != 0 then Music2 = silence(duration:Delay)|Music
-        else Music2 = Music
-        end
-        local A B in
-           A = 1#Music
-           B = Decay#Music2
-           {Merge A|B|nil}
-        end
-         end
+      local A B C in
+     A=1.0#Music
+     B=samples({Append {Mix P2T silence(duration:Delay)} {Mix P2T Music}})
+     C=Decay#B
+     {Merge [A C]}
       end
-
+   end
 
 
    fun{Fade Start Out Music}
@@ -376,36 +371,40 @@ end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   % peut etre ajouter P2T en argument pour etre sur qu'il l'utilise
-   fun{Prod Music}
-      case Music
-      of A#B then
-	 local
-	    Q={Mix P2T B}
-	 in
-	    local
-	       fun{Prod2 A Q}
-		  case Q
-		  of nil then nil
-		  []H|T then A*Q.1|{Prod2 A Q.2}
-		  else A*Q
-		  end
-	       end
-	    in
-	       {Prod2 A Q}
-	    end
-	 end
+   fun{Add A B}
+         case A
+         of nil then case B
+             of nil then nil
+             [] H|T then H|{Add A T}
+             end
+         [] Q|S then case B
+             of nil then Q|{Add S B}
+             [] H|T then Q+H|{Add S T}
+             end
+         end
       end
-   end
 
-   % peut etre ajouter P2T en argument pour etre sur qu'il l'utilise
-   fun{Merge Musics}
-      case Musics.1
-      of nil then nil
-      [] A#B then {Prod Musics.1}|{Merge Musics.2}
-      else {Prod Musics}
+
+      fun{Mult Factor List}
+         case List
+         of nil then nil
+         [] H|T then Factor*H|{Mult Factor T}
+         end
       end
-   end
+
+
+      fun{Merge Musics}
+         case Musics
+         of nil then nil
+         [] H|T then
+        case H of A#B then
+           local Q in
+              Q={Mix P2T B}
+              {Add {Mult A Q} {Merge T}}
+           end
+        end
+         end
+      end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % AUTRES FONCTIONS
