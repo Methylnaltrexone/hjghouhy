@@ -273,7 +273,7 @@ end
 
    % takes as argument a file path and returns a sample
    fun{WavToSample FileName}
-      {Project.load FileName}
+      {Project.readFile FileName}
    end
 
 
@@ -425,22 +425,41 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % !! si on a une partition il faut faire P2T(Partition)
    % et pas PartitionToTimedList(Partition)
+
    fun {Mix P2T Music}
-      case Music
-      of H|T then
-         case {Label H}
-         of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
-            [] 'samples' then H.1|{Mix P2T T}
-            [] 'wave' then {WavToSample H.1}|{Mix P2T T}
-            [] 'merge' then
-            [] 'reverse' then {List.reverse {Mix P2T H.1}}|{Mix P2T T}
-            [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
-            [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
-            [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
-            [] 'echo' then
-            [] 'fade' then {Fade H.start H.out {Mix P2T H.1}}|{Mix P2T T}
-            [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
-      []
+      case {Label Music}
+      of 'partition' then {PartToSamp {P2T H.1}}
+      [] 'samples' then H.1
+      [] 'wave' then {WavToSample H.1}
+      [] 'merge' then {Merge H.1}
+      [] 'reverse' then {List.reverse {Mix P2T H.1}}
+      [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}
+      [] 'loop' then {Loop H.seconds {Mix P2T H.1}}
+      [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}
+      [] 'echo' then {Echo H.delay H.decay {Mix P2T H.1}}
+      [] 'fade' then {Fade H.start H.out {Mix P2T H.1}}
+      [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}
+      [] 'silence' then {MoarZeros H.duration*44100.0}
+      else case Music
+       of nil then nil
+       [] H|T then
+          case {Label H}
+          of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
+          [] 'samples' then H.1|{Mix P2T T}
+          [] 'wave' then {WavToSample H.1}|{Mix P2T T}
+          [] 'merge' then {Merge H.1}|{Mix P2T T}
+          [] 'reverse' then {List.reverse {Mix P2T H.1}}|{Mix P2T T}
+          [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
+          [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
+          [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
+          [] 'echo' then {Echo H.delay H.decay {Mix P2T H.1}}|{Mix P2T T}
+          [] 'fade' then{Fade H.start H.out {Mix P2T H.1}}|{Mix P2T T}
+          [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
+          [] 'silence' then {MoarZeros H.duration*44100.0}|{Mix P2T T}
+          end
+
+       end
+      end
       {Project.readFile 'wave/animaux/cow.wav'}
    end
 
