@@ -356,22 +356,22 @@ end
          Istop = Finish*44100.0
          fun{YesOrNo Music AccI}
             case Music
-            of H|T then if AccI >= {FloatToInt Istart}
-                           then if AccI < {FloatToInt Istop} then H|{YesOrNo T AccI+1} %ajouter a la liste
+            of H|T then if AccI >= Istart
+                           then if AccI < Istop then H|{YesOrNo T AccI+1.0} %ajouter a la liste
                                 else H % AccI = Istop normalement
                                 end
-                        else {YesOrNo T AccI+1}
+                        else {YesOrNo T AccI+1.0}
                         end
-            [] nil then if AccI >= {FloatToInt Istart}
-                           then if AccI < Istop then {MoarZeros {FloatToInt Istop}+1-AccI}
-                                else 0 % AccI = Istop normalement
+            [] nil then if AccI >= Istart
+                           then if AccI < Istop then {MoarZeros Istop+1.0-AccI}
+                                else 0.0 % AccI = Istop normalement
                                 end
-                        else {YesOrNo Music AccI+1}
+                        else {YesOrNo Music AccI+1.0}
                         end
             end
          end
       in
-         {YesOrNo Music 1}
+         {YesOrNo Music 1.0}
       end
    end
 
@@ -417,9 +417,9 @@ end
 
    % amount is a natural, the functions returns a list of Amount zeros
    fun{MoarZeros Amount}
-      case Amount of 1 then 0|nil
-      [] 0 then nil
-      else 0|{MoarZeros Amount-1}
+      case Amount of 1.0 then 0.0|nil
+      [] 0.0 then nil
+      else 0.0|{MoarZeros Amount-1.0}
       end
    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
