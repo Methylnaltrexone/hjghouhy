@@ -445,18 +445,18 @@ end
        of nil then nil
        [] H|T then
           case {Label H}
-          of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
-          [] 'samples' then H.1|{Mix P2T T}
-          [] 'wave' then {WavToSample H.1}|{Mix P2T T}
-          [] 'merge' then {Merge P2T H.1}|{Mix P2T T}
-          [] 'reverse' then {List.reverse {Mix P2T H.1}}|{Mix P2T T}
-          [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
-          [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
-          [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
-          [] 'echo' then {Echo P2T H.delay H.decay {Mix P2T H.1}}|{Mix P2T T}
-          [] 'fade' then{Fade H.start H.out {Mix P2T H.1}}|{Mix P2T T}
-          [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
-          [] 'silence' then {MoarZeros H.duration*44100.0}|{Mix P2T T}
+          of 'partition' then {Append {PartToSamp {P2T H.1}} {Mix P2T T}}
+          [] 'samples' then {Append H.1 {Mix P2T T}}
+          [] 'wave' then {Append {WavToSample H.1} {Mix P2T T}}
+          [] 'merge' then {Append {Merge P2T H.1} {Mix P2T T}}
+          [] 'reverse' then {Append{List.reverse {Mix P2T H.1}}{Mix P2T T}}
+          [] 'repeat' then {Append {Repeat H.amount {Mix P2T H.1}} {Mix P2T T}}
+          [] 'loop' then {Append {Loop H.seconds {Mix P2T H.1}} {Mix P2T T}}
+          [] 'clip' then {Append {Clip H.low H.high {Mix P2T H.1}} {Mix P2T T}}
+          [] 'echo' then {Append {Echo P2T H.delay H.decay {Mix P2T H.1}} {Mix P2T T}}
+          [] 'fade' then {Append {Fade H.start H.out {Mix P2T H.1}} {Mix P2T T}}
+          [] 'cut' then {Append {Cut H.start H.finish {Mix P2T H.1}} {Mix P2T T}}
+          [] 'silence' then {Append {MoarZeros H.duration*44100.0} {Mix P2T T}}
           end
 
        end
