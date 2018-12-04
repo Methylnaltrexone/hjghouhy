@@ -288,8 +288,8 @@ end
       local
          A = {List.length Music}
          B = Seconds*44100.0
-         C = {FloatToInt B} div A % la division ramenee vers le bas
-         D = B/{IntToFloat A} - {IntToFloat C} % le reste de la division
+         C = {FloatToInt B} div A
+         D = (B - {IntToFloat A*C})/44100.0
       in
          {Append {Repeat C Music} {Cut 0.0 D Music}}
       end
@@ -353,14 +353,14 @@ end
             else
             case Music
             of H|T then if AccI >= Istart
-                           then if AccI < Istop then H|{YesOrNo T AccI+1.0} %ajouter a la liste
-                                else H|nil % AccI = Istop normalement
+                           then if AccI < Istop then H|{YesOrNo T AccI+1.0}
+                                else H|nil
                                 end
                         else {YesOrNo T AccI+1.0}
                         end
             [] nil then if AccI >= Istart
                            then if AccI < Istop then {MoarZeros Istop+1.0-AccI}
-                                else 0.0 % AccI = Istop normalement
+                                else 0.0
                                 end
                         else {YesOrNo Music AccI+1.0}
                         end
