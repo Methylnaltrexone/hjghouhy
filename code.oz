@@ -310,7 +310,7 @@ end
 
 
 
-   fun{Echo Delay Decay Music}
+   fun{Echo P2T Delay Decay Music}
       local A B C in
      A=1.0#Music
      B=samples({Append {Mix P2T silence(duration:Delay)} {Mix P2T Music}})
@@ -395,7 +395,7 @@ end
       end
 
 
-      fun{Merge Musics}
+      fun{Merge P2T Musics}
          case Musics
          of nil then nil
          [] H|T then
@@ -432,14 +432,14 @@ end
       of 'partition' then {PartToSamp {P2T Music.1}}
       [] 'samples' then Music.1
       [] 'wave' then {WavToSample Music.1}
-      [] 'merge' then {Merge Music.1}
+      [] 'merge' then {Merge P2T Music.1}
       [] 'reverse' then {List.reverse {Mix P2T Music.1}}
-      [] 'repeat' then {Repeat H.amount {Mix P2T Music.1}}
-      [] 'loop' then {Loop H.seconds {Mix P2T Music.1}}
-      [] 'clip' then {Clip H.low H.high {Mix P2T Music.1}}
-      [] 'echo' then {Echo H.delay H.decay {Mix P2T Music.1}}
-      [] 'fade' then {Fade H.start H.out {Mix P2T Music.1}}
-      [] 'cut' then {Cut H.start H.finish {Mix P2T Music.1}}
+      [] 'repeat' then {Repeat Music.amount {Mix P2T Music.1}}
+      [] 'loop' then {Loop Music.seconds {Mix P2T Music.1}}
+      [] 'clip' then {Clip Music.low Music.high {Mix P2T Music.1}}
+      [] 'echo' then {Echo P2T Music.delay Music.decay {Mix P2T Music.1}}
+      [] 'fade' then {Fade Music.start Music.out {Mix P2T Music.1}}
+      [] 'cut' then {Cut Music.start Music.finish {Mix P2T Music.1}}
       [] 'silence' then {MoarZeros Music.duration*44100.0}
       else case Music
        of nil then nil
@@ -448,12 +448,12 @@ end
           of 'partition' then {PartToSamp {P2T H.1}}|{Mix P2T T}
           [] 'samples' then H.1|{Mix P2T T}
           [] 'wave' then {WavToSample H.1}|{Mix P2T T}
-          [] 'merge' then {Merge H.1}|{Mix P2T T}
+          [] 'merge' then {Merge P2T H.1}|{Mix P2T T}
           [] 'reverse' then {List.reverse {Mix P2T H.1}}|{Mix P2T T}
           [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}|{Mix P2T T}
           [] 'loop' then {Loop H.seconds {Mix P2T H.1}}|{Mix P2T T}
           [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}|{Mix P2T T}
-          [] 'echo' then {Echo H.delay H.decay {Mix P2T H.1}}|{Mix P2T T}
+          [] 'echo' then {Echo P2T H.delay H.decay {Mix P2T H.1}}|{Mix P2T T}
           [] 'fade' then{Fade H.start H.out {Mix P2T H.1}}|{Mix P2T T}
           [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}|{Mix P2T T}
           [] 'silence' then {MoarZeros H.duration*44100.0}|{Mix P2T T}
