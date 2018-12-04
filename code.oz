@@ -324,14 +324,13 @@ end
       local
          Opening = Start*44100.0
          Ending = Out*44100.0
-         SampTot = {List.length Music}
-         % SampBetween = SampTot - Opening - Ending
+         SampTot = {IntToFloat {List.length Music}}
          MultIn = 1.0/Opening
          MultOut = 1.0/Ending
          fun{Multip Music Acc}
-            case Music of H|T then if Acc <= Opening
+            case Music of H|T then if Acc < Opening+1.0
                                      then MultIn*(Acc-1.0)|{Multip T Acc+1.0}
-                                   else if Acc >= Ending
+                                   else if Acc > (SampTot-Ending)
                                           then MultOut*(SampTot - Acc)|{Multip T Acc+1.0}
                                         else H|{Multip T Acc+1.0}
                                         end
