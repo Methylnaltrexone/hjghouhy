@@ -280,7 +280,7 @@ end
    % takes a natural and a sample as argument, returns Amount time the sample
    fun{Repeat Amount Music}
       if Amount == 0 then nil
-      else Music|{Repeat Amount-1 Music}
+      else {Append Music {Repeat Amount-1 Music}}
       end
    end
 
@@ -288,10 +288,10 @@ end
       local
          A = {List.length Music}
          B = Seconds*44100.0
-         C = {FloatToInt B} div {FloatToInt A} % la division ramenee vers le bas
-         D = B/A - {IntToFloat C} % le reste de la division
+         C = {FloatToInt B} div A % la division ramenee vers le bas
+         D = B/{IntToFloat A} - {IntToFloat C} % le reste de la division
       in
-         {Repeat C Music}|{Cut 0.0 D Music}
+         {Append {Repeat C Music} {Cut 0.0 D Music}}
       end
    end
 
@@ -349,10 +349,12 @@ end
          Istart = Start*44100.0
          Istop = Finish*44100.0
          fun{YesOrNo Music AccI}
+            if Istart == 0.0 andthen Istop == 0.0 then nil
+            else
             case Music
             of H|T then if AccI >= Istart
                            then if AccI < Istop then H|{YesOrNo T AccI+1.0} %ajouter a la liste
-                                else H % AccI = Istop normalement
+                                else H|nil % AccI = Istop normalement
                                 end
                         else {YesOrNo T AccI+1.0}
                         end
@@ -362,6 +364,7 @@ end
                                 end
                         else {YesOrNo Music AccI+1.0}
                         end
+            end
             end
          end
       in
@@ -426,18 +429,18 @@ end
 
    fun {Mix P2T Music}
       case {Label Music}
-      of 'partition' then {PartToSamp {P2T H.1}}
-      [] 'samples' then H.1
-      [] 'wave' then {WavToSample H.1}
-      [] 'merge' then {Merge H.1}
-      [] 'reverse' then {List.reverse {Mix P2T H.1}}
-      [] 'repeat' then {Repeat H.amount {Mix P2T H.1}}
-      [] 'loop' then {Loop H.seconds {Mix P2T H.1}}
-      [] 'clip' then {Clip H.low H.high {Mix P2T H.1}}
-      [] 'echo' then {Echo H.delay H.decay {Mix P2T H.1}}
-      [] 'fade' then {Fade H.start H.out {Mix P2T H.1}}
-      [] 'cut' then {Cut H.start H.finish {Mix P2T H.1}}
-      [] 'silence' then {MoarZeros H.duration*44100.0}
+      of 'partition' then {PartToSamp {P2T Music.1}}
+      [] 'samples' then Music.1
+      [] 'wave' then {WavToSample Music.1}
+      [] 'merge' then {Merge Music.1}
+      [] 'reverse' then {List.reverse {Mix P2T Music.1}}
+      [] 'repeat' then {Repeat H.amount {Mix P2T Music.1}}
+      [] 'loop' then {Loop H.seconds {Mix P2T Music.1}}
+      [] 'clip' then {Clip H.low H.high {Mix P2T Music.1}}
+      [] 'echo' then {Echo H.delay H.decay {Mix P2T Music.1}}
+      [] 'fade' then {Fade H.start H.out {Mix P2T Music.1}}
+      [] 'cut' then {Cut H.start H.finish {Mix P2T Music.1}}
+      [] 'silence' then {MoarZeros Music.duration*44100.0}
       else case Music
        of nil then nil
        [] H|T then
